@@ -21,15 +21,16 @@ DIRS = boot
 
 all: clean Image
 
-Image: mkdirs kernel.bin
+Image: mkdirs system
 	dd if=boot/bootsect bs=512 count=1 of=Image
-	dd if=kernel.bin seek=1 bs=512  of=Image
+	dd if=boot/setup seek=1 bs=512 count=4 of=Image
+	dd if=system seek=5 bs=512  of=Image
 	sync
 
 mkdirs:
 	@for i in $(DIRS); do make -C $$i; done
 
-kernel.bin: boot/head.o #init/main.o $(ARCHIVES) $(DRIVERS) $(MATH) $(LIBS)
+system: boot/head.o #init/main.o $(ARCHIVES) $(DRIVERS) $(MATH) $(LIBS)
 	$(LD) $(LDFLAGS) -o $@ $^
 	cp -f $@ kernel.tmp 
 	$(STRIP) kernel.tmp
@@ -37,5 +38,5 @@ kernel.bin: boot/head.o #init/main.o $(ARCHIVES) $(DRIVERS) $(MATH) $(LIBS)
 	rm -f kernel.tmp 
 
 clean:
-	@rm -f Image kernel.bin
+	@rm -f Image system
 	@for i in $(DIRS); do make clean -C $$i; done
