@@ -1,10 +1,10 @@
 # x01.treeos
-ubuntu-16.04 + gcc-5.4 学习 linux-0.12，希望能成为一棵长满钻石的小树。
+ubuntu-16.04 + gcc-5.4 学习 linux-0.12，一棵长满钻石的小树。
 ## 1 准备工作
 ### 1.0 预备知识
-- **资源下载**
+- **资源下载**  
 [oldlinux](http://www.oldlinux.org/)
-- **md 基础**
+- **md 基础**  
 ```
 title: # h1, ## h2 ...
 picture: ![Alt text](/path/img)
@@ -116,3 +116,11 @@ sudo apt-get install build-essential
 ### 2.3 head.s 
 1. 启动分页
 2. 进入 main 任务0
+
+## 3 init
+1. 安装根文件系统
+2. 显示系统信息
+3. 执行资源配置文件
+4. 执行用户登录 shell
+
+

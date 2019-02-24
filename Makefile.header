@@ -1,10 +1,29 @@
-CC	= gcc
-CFLAGS	= -m32 -Wall  -O0 -g3 -gdwarf-2  -nostdinc -Iinclude  \
-	-fstrength-reduce -fomit-frame-pointer -fno-stack-protector -fno-builtin  
-LD	= ld
-LDFLAGS = -m elf_i386
-CPP	= cpp -nostdinc -Iinclude 
+# \033[0;34;47m 颜色属性设置说明：
+# \033:ESC; [
+# 0:关闭属性，1：高亮，4：下划线，5：闪烁，7：反显，8：消隐
+# 30-37:字颜色; 40-47: 背景色;  m
+CCCOLOR = "\033[34m"	
+LINKCOLOR="\033[34;1m"
+SRCCOLOR="\033[33m"
+BINCOLOR="\033[37;1m"
+MAKECOLOR="\033[32;1m"
+ENDCOLOR="\033[0m"
 
-AR = ar 
-STRIP   = strip
-OBJCOPY = objcopy
+QUIET_CC = @printf '    %b %b\n' $(CCCOLOR)CC$(ENDCOLOR) $(SRCCOLOR)$@$(ENDCOLOR) 1>&2;
+QUIET_LINK = @printf '    %b %b\n' $(LINKCOLOR)LINK$(ENDCOLOR) $(BINCOLOR)$@$(ENDCOLOR) 1>&2;
+QUIET_INSTALL = @printf '    %b %b\n' $(LINKCOLOR)INSTALL$(ENDCOLOR) $(BINCOLOR)$@$(ENDCOLOR) 1>&2;
+
+AS86	=$(QUIET_CC)as86 -0 -a
+LD86	=$(QUIET_LINK)ld86 -0
+
+AS	= $(QUIET_CC)as --32
+LD	= $(QUIET_LINK)ld
+LDFLAGS = -m elf_i386
+CC	= $(QUIET_CC)gcc
+CFLAGS	=-O0 -g3 -gdwarf-2 -m32 -fstrength-reduce -fomit-frame-pointer -fno-stack-protector -fno-builtin #-Wall
+
+CPP	= cpp -nostdinc
+AR	= $(QUIET_LINK)ar
+CPP_DISPLAY = $(QUIET_CC)cpp -nostdinc
+
+gcc_version=${(4.4)}
