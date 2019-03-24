@@ -27,6 +27,7 @@ LIBS	=lib/lib.a
 
 DelObjs = Image System.map System_s.map system.S tmp_make core boot/bootsect boot/setup \
 	 tools/build  tools/system system 
+
 .c.s:
 	$(CC) $(CFLAGS) \
 	-nostdinc -Iinclude -S -o $*.s $<
@@ -35,7 +36,6 @@ DelObjs = Image System.map System_s.map system.S tmp_make core boot/bootsect boo
 .c.o:
 	$(CC) $(CFLAGS) \
 	-nostdinc -Iinclude -c -o $*.o $<
-
 
 all: clean Image
 
@@ -94,7 +94,7 @@ kernel/chr_drv/chr_drv.a:
 	@make -C kernel/chr_drv
 
 clean:
-	@rm -f $(DelObjs)
+	@rm -f $(DelObjs) a.out 
 	@rm -f init/*.o tools/system boot/*.o typescript* info bochsout.txt
 	@for i in mm fs kernel lib boot; do make clean -C $$i; done
 
