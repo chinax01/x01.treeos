@@ -1,0 +1,8 @@
+{
+	"C_Cpp.intelliSenseEngineFallback": "Enabled",
+	"files.associations": {
+		"global.h": "c",
+		"keyboard.h": "c",
+		"proto.h": "c"
+	}
+}

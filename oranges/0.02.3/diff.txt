@@ -1,0 +1,470 @@
+5,14d4
+< PageDirBase0 equ	0x200000
+< PageTblBase0 equ 	0x201000
+< PageDirBase1 equ	0x210000
+< PageTblBase1 equ 	0x211000
+< 
+< LinearAddrDemo	equ 0x00401000
+< ProcFoo			equ 0x00401000
+< ProcBar			equ 0x00501000
+< ProcPagingDemo	equ 0x00301000
+< 
+21c11
+< gdt_video:	Descriptor 0x0B8000, 0xFFFF, DA_DRW 
+---
+> gdt_video:	Descriptor 0x0B8000, 0xFFFF, DA_DRW + DA_DPL3 
+26a17,19
+> gdt_test:	Descriptor 0x500000, 0xFFFF, DA_DRW 
+> 
+> gdt_ldt:	Descriptor 0, LdtLen - 1, DA_LDT
+28,29c21,22
+< gdt_pagedir:	Descriptor PageDirBase0, 4095, DA_DRW 
+< gdt_pagetbl:	Descriptor PageTblBase0, 4096*8-1, DA_DRW
+---
+> gdt_dest:	Descriptor 0, DestLen - 1, DA_C + DA_32
+> gdt_gate_test:	Gate SelectorDest, 0, 0, DA_386CGate + DA_DPL3
+31,32c24,27
+< gdt_flatC:		Descriptor 0, 0xFFFF, DA_CR | DA_32 | DA_Limit_4K
+< gdt_flatD:		Descriptor 0, 0xFFFF, DA_DRW | DA_Limit_4K
+---
+> gdt_codeRing3:	Descriptor 0, CodeRing3Len - 1, DA_C + DA_32 + DA_DPL3
+> gdt_stackRing3:	Descriptor 0, TopOfStack3, DA_DRWA + DA_32 + DA_DPL3
+> 
+> gdt_tss:		Descriptor 0, TssLen - 1, DA_386TSS
+46a42
+> SelectorTest 	equ gdt_test - gdts 
+48,49c44
+< SelectorPageDir		equ gdt_pagedir - gdts 
+< SelectorPageTbl		equ gdt_pagetbl - gdts 
+---
+> SelectorLdt		equ gdt_ldt - gdts 
+51,69c46,47
+< [section .data]
+< align 32
+< [bits 32]
+< seg_data:
+< sp_realmode:	dw 0
+< pm_message:		db	"In Protect Mode now. ^-^", 0Ah, 0Ah, 0	 ; db "In protect mode ^-^", 0xA, 0
+< mem_title:	db "BaseAddrL BaseAddrH LengthLow LengthHigh  Type", 0xA, 0
+< ram_size:	db "RAM size: ", 0
+< return:		db 0x0A, 0
+< mcr_number:	dd 0
+< disp_pos:	dd (80*6)*2
+< mem_size:	dd 0
+< addr_range:
+< 	base_addr_low:	dd 0
+< 	base_addr_high: dd 0
+< 	length_low:		dd 0
+< 	length_high:	dd 0
+< 	type: 			dd 0
+< mem_buf:	times 256 db 0
+---
+> SelectorDest	equ gdt_dest - gdts 
+> SelectorGateTest	equ gdt_gate_test - gdts  + SA_RPL3
+71,84c49,50
+< OffsetPmMessage	equ pm_message - $$
+< OffsetMemTitle	equ mem_title - $$
+< OffsetRamSize	equ ram_size - $$
+< OffsetReturn 	equ return - $$
+< OffsetMcrNumber	equ mcr_number - $$
+< OffsetDispPos	equ disp_pos - $$
+< OffsetMemSize	equ mem_size - $$
+< OffsetAddrRange	equ addr_range - $$
+< 	OffsetBaseAddrLow	equ base_addr_low - $$
+< 	OffsetBaseAddrHigh	equ base_addr_high - $$
+< 	OffsetLengthLow		equ length_low - $$
+< 	OffsetLengthHigh 	equ length_high - $$	
+< 	OffsetType 			equ type - $$
+< OffsetMemBuf	equ mem_buf - $$
+---
+> SelectorCodeRing3	equ gdt_codeRing3 - gdts + SA_RPL3
+> SelectorStackRing3	equ gdt_stackRing3 - gdts + SA_RPL3 
+86,92c52
+< DataLen 		equ $ - seg_data
+< 
+< [section .stack]
+< align 32
+< [bits 32]
+< seg_stack:	times 512 db 0
+< TopOfStack	equ $ - seg_stack - 1
+---
+> SelectorTss			equ gdt_tss - gdts 
+106,123d65
+< 	; memory check
+< 	mov ebx, 0
+< 	mov di, mem_buf
+< .loop:
+< 	mov eax, 0xE820
+< 	mov ecx, 20
+< 	mov edx, 0x534D4150
+< 	int 0x15
+< 	jc check_mem_fail
+< 	add di, 20
+< 	inc dword [mcr_number]
+< 	cmp ebx, 0
+< 	jne .loop
+< 	jmp check_mem_ok
+< check_mem_fail:
+< 	mov dword [mcr_number], 0
+< check_mem_ok:
+< 
+128a71
+> 	FillBase seg_dest, gdt_dest 
+129a73,80
+> 	FillBase seg_ldt, gdt_ldt
+> 	FillBase seg_ldtcode32, ldt_code32
+> 
+> 	FillBase seg_codeRing3, gdt_codeRing3
+> 	FillBase seg_stackRing3, gdt_stackRing3
+> 
+> 	FillBase seg_tss, gdt_tss 
+> 
+160,161c111
+< 	;and al, 0xFD
+< 	and	al, 11111101b
+---
+> 	and al, 0xFD
+174c124
+< 	mov ax, SelectorData
+---
+> 	mov ax, SelectorTest
+182,209c132,133
+< 	push OffsetPmMessage
+< 	call DispStr
+< 	add esp, 4
+< 
+< 	;push OffsetMemTitle
+< 	;call DispStr 
+< 	;add  esp, 4
+< 
+< 	call GetMemSize
+< 
+< 	call SetupPaging
+< 
+< 	jmp SelectorCode16:0
+< 
+< SetupPaging:
+< 	xor edx, edx
+< 	mov eax, [OffsetMemSize]
+< 	mov ebx, 0x40000
+< 	div ebx 
+< 	mov ecx, eax 
+< 	test edx, edx 
+< 	jz .no_remainder
+< 	inc ecx 
+< .no_remainder:
+< 	push ecx 
+< 
+< 	mov ax, SelectorPageDir
+< 	mov es, ax 
+---
+> 	mov ah, 0x0C
+> 	xor esi, esi 
+211,212c135,137
+< 	xor eax, eax 
+< 	mov eax, PageTblBase0 | PG_P | PG_RW
+---
+> 	mov esi, OffsetPmMessage
+> 	mov edi, (80*14)*2
+> 	cld 
+214,216c139,176
+< 	stosd 
+< 	add eax, 4096
+< 	loop .1
+---
+> 	lodsb
+> 	test al, al 
+> 	jz .2
+> 	mov [gs:edi], ax 
+> 	add edi, 2
+> 	jmp .1
+> .2:
+> 	call DispReturn
+> 	
+> 	;call TestRead
+> 	;call TestWrite
+> 	;call TestRead 
+> 
+> 	mov ax, SelectorTss
+> 	ltr ax 
+> 
+> 	push SelectorStackRing3
+> 	push TopOfStack3
+> 	push SelectorCodeRing3
+> 	push 0
+> 	retf 
+> 
+> 	;call SelectorGateTest:0
+> 
+> 	;mov ax, SelectorLdt
+> 	;lldt ax 
+> 	;jmp SelecotrLdtCode32:0
+> 
+> TestRead:
+> 	xor esi, esi 
+> 	mov ecx, 8
+> .loop:
+> 	mov al, [es:esi]
+> 	call DispAL
+> 	inc esi 
+> 	loop .loop 
+> 	call DispReturn
+> 	ret 
+218,223c178,181
+< 	mov ax, SelectorPageTbl
+< 	mov es, ax 
+< 	pop eax 
+< 	mov ebx, 1024
+< 	mul ebx 
+< 	mov ecx, eax 
+---
+> TestWrite:
+> 	push esi 
+> 	push edi 
+> 	xor esi, esi 
+225,226c183,191
+< 	xor eax, eax 
+< 	mov eax, PG_P | PG_RW 
+---
+> 	mov esi, OffsetTestStr
+> 	cld 
+> .1:
+> 	lodsb 
+> 	test al, al 
+> 	jz .2
+> 	mov [es:edi], al 
+> 	inc edi 
+> 	jmp .1 
+228,240c193,194
+< 	stosd 
+< 	add eax, 4096
+< 	loop .2
+< 
+< 	mov eax, PageDirBase0
+< 	mov cr3, eax 
+< 	mov eax, cr0 
+< 	or eax, 0x80000000
+< 	mov cr0, eax 
+< 	jmp short .3
+< .3:
+< 	nop
+< 
+---
+> 	pop edi 
+> 	pop esi 
+243,245c197
+< GetMemSize:
+< 	push esi 
+< 	push edi
+---
+> DispAL:
+247,252c199,210
+< 
+< 	mov esi, OffsetMemBuf
+< 	mov ecx, [OffsetMcrNumber]
+< .loop:
+< 	mov edx, 5
+< 	mov edi, OffsetAddrRange
+---
+> 	push edx 
+> 	
+> 	mov ah, 0x0C
+> 	mov dl, al 
+> 	shr al, 4
+> 	mov ecx, 2
+> .begin:
+> 	and al, 0x0F
+> 	cmp al, 9
+> 	ja .1
+> 	add al, '0'
+> 	jmp .2 
+254,270c212,213
+< 	;push dword [esi]
+< 	;call DispInt
+< 	;pop eax 
+< 	mov eax, dword [esi]
+< 	stosd 
+< 	add esi, 4
+< 	dec edx 
+< 	cmp edx, 0
+< 	jnz .1
+< 	;call DispReturn 
+< 	cmp dword [OffsetType], 1
+< 	jne .2 
+< 	mov eax, [OffsetBaseAddrLow]
+< 	add eax, [OffsetLengthLow]
+< 	cmp eax, [OffsetMemSize]
+< 	jb .2
+< 	mov [OffsetMemSize], eax 
+---
+> 	sub al, 0x0A
+> 	add al, 'A'
+272c215,216
+< 	loop .loop
+---
+> 	mov [gs:edi], ax 
+> 	add edi, 2
+274,281c218,220
+< 	;call DispReturn
+< 	;push OffsetRamSize
+< 	;call DispStr
+< 	;add esp, 4
+< 
+< 	push dword [OffsetMemSize]
+< 	call DispInt 
+< 	add esp, 4
+---
+> 	mov al, dl
+> 	loop .begin 
+> 	add edi, 2
+283,285c222,238
+< 	pop ecx 
+< 	pop edi 
+< 	pop esi 
+---
+> 	pop edx 
+> 	pop ecx
+> 	ret 
+> 
+> DispReturn:
+> 	push eax 
+> 	push ebx 
+> 	mov eax, edi 
+> 	mov bl, 160
+> 	div bl 
+> 	and eax, 0xFF
+> 	inc eax 
+> 	mov bl, 160
+> 	mul bl 
+> 	mov edi, eax 
+> 	pop ebx 
+> 	pop eax 
+288d240
+< %include "lib.inc"
+304c256
+< 	and eax, 0x7FFFFFFE
+---
+> 	and al, 0xFE
+311a264,385
+> [section .data]
+> align 32
+> [bits 32]
+> seg_data:
+> sp_realmode:	dw 0
+> pm_message:		db "In protect mode", 0
+> OffsetPmMessage	equ pm_message - $$
+> test_str:		db "ABCDEFGHIJKLMNOPQRSTUVWXYZ", 0
+> OffsetTestStr 	equ test_str - $$
+> 
+> DataLen 		equ $ - seg_data
+> 
+> [section .stack]
+> align 32
+> [bits 32]
+> seg_stack:	times 512 db 0
+> TopOfStack	equ $ - seg_stack - 1
+> 
+> [section .ldt]
+> align 32
+> [bits 32]
+> seg_ldt:
+> ldt_code32:		Descriptor 0, LdtCode32Len - 1, DA_C + DA_32 
+> 
+> LdtLen 	equ $ - seg_ldt
+> 
+> SelecotrLdtCode32	equ ldt_code32 - seg_ldt + SA_TIL
+> 
+> [section .ldtcode32]
+> align 32
+> [bits 32]
+> seg_ldtcode32:
+> 	mov ax, SelectorVideo
+> 	mov gs, ax 
+> 	mov edi, (80*16)*2
+> 	mov ah, 0x0C
+> 	mov al, 'L'
+> 	mov [gs:edi], ax 
+> 
+> 	jmp SelectorCode16:0
+> 
+> LdtCode32Len equ $ - seg_ldtcode32
+> 
+> [section .dest]
+> align 32
+> [bits 32]
+> seg_dest:
+> 	mov ax, SelectorVideo
+> 	mov gs, ax 
+> 	mov edi, (80*17)*2
+> 	mov ah, 0x0C
+> 	mov al, 'C'
+> 	mov [gs:edi], ax 
+> 
+> 	mov ax, SelectorLdt
+> 	lldt ax 
+> 	
+> 	jmp SelecotrLdtCode32:0
+> 	
+> 	;retf
+> 
+> DestLen equ $ - seg_dest
+> 
+> [section .codering3]
+> align 32
+> [bits 32]
+> seg_codeRing3:
+> 	mov ax, SelectorVideo
+> 	mov gs, ax 
+> 	mov edi, (80*18)*2
+> 	mov ah, 0x0C
+> 	mov al, '3'
+> 	mov [gs:edi], ax 
+> 
+> 	call SelectorGateTest:0
+> 
+> 	jmp $
+> 
+> CodeRing3Len	equ $ - seg_codeRing3
+> 
+> [section .stackRing3]
+> align 32
+> [bits 32]
+> seg_stackRing3:
+> 	times 512 db 0
+> 
+> TopOfStack3 equ $ - seg_stackRing3 - 1
+> 
+> [section .tss]
+> align 32
+> [bits 32]
+> seg_tss:
+> 	dd 0
+> 	dd TopOfStack
+> 	dd SelectorStack
+> 	dd 0
+> 	dd 0
+> 	dd 0
+> 	dd 0
+> 	dd 0	; cr3 
+> 	dd 0	; eip
+> 	dd 0	; eflags
+> 	dd 0	; eax  
+> 	dd 0	; ecx 
+> 	dd 0	; edx 
+> 	dd 0	; ebx 
+> 	dd 0	; esp 
+> 	dd 0	; ebp
+> 	dd 0	; esi 
+> 	dd 0	; edi 
+> 	dd 0	; es 
+> 	dd 0	; cs 
+> 	dd 0	; ss 
+> 	dd 0	; ds 
+> 	dd 0	; fs 
+> 	dd 0	; gs 
+> 	dd 0	; ldt
+> 	dw 0
+> 	dw $ - seg_tss + 2 
+> 	db 0xFF
+> 
+> TssLen equ $ - seg_tss 

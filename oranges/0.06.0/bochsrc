@@ -1,0 +1,17 @@
+#--------------------------
+# config for bochs
+#--------------------------
+display_library : sdl
+
+megs : 32
+
+romimage : file=/usr/share/bochs/BIOS-bochs-latest
+vgaromimage : file=/usr/share/vgabios/vgabios.bin
+
+floppya: 1_44="a.img", status=inserted
+
+boot: a
+
+mouse: enabled=0
+
+#keyboard: enabled=1, map=$BXSHARE/keymaps/sdl-pc-us.map
