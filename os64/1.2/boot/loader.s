@@ -344,6 +344,12 @@ Label_Get_Mem_OK:
 	mov	bp,	StartGetSVGAVBEInfoMessage
 	int	10h
 
+	; int 10h (ax=0x4f00)
+	; 输入：
+	;	ax=0x4f00 => 获取 VBE 控制器信息
+	;	es:di => 指向信息块结构的起始地址
+	; 输出：
+	;	ax => VBE 返回状态
 	mov	ax,	0x00
 	mov	es,	ax
 	mov	di,	0x8000
@@ -427,6 +433,13 @@ Label_SVGA_Mode_Info_Get:
 	cmp	cx,	0FFFFh
 	jz	Label_SVGA_Mode_Info_Finish
 
+	; int 10h (ax=0x4f01)
+	; 输入：
+	;	ax=0x4f01 => 获取 VBE 模式信息
+	;	cx => 模式号
+	;	es:di => 指向模式结构起始地址
+	; 输出：
+	;	ax => VBE 返回状态
 	mov	ax,	4F01h
 	int	10h
 
@@ -472,6 +485,17 @@ Label_SVGA_Mode_Info_Finish:
 
 ;=======	set the SVGA mode(VESA VBE)
 
+	; int 10h (ax = 0x4f02)
+	; 输入：
+	;	ax=0x4f02 => 设置 VBE 显示模式
+	;	bx => D0-8(VBE模式号）， D9-10（保留，必须为0）
+	;		  D11=0(使用当前刷新率），D11=1(使用CRTC刷新率定制值）
+	;		  D12-13(VBE/AF 保留使用，必须为0）
+	;		  D14=0(使用窗口帧缓存模式）， D14=1(使用线性帧缓存模式）
+	;		  D15=0(清空显示内存数据），D15=1(保留显示内存数据）
+	;	es:di => 显示模式结果起始地址
+	; 输出：
+	;	ax => VBE 返回状态
 	mov	ax,	4F02h
 	mov	bx,	4180h	;========================mode : 0x180 or 0x143
 	int 	10h

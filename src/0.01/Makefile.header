@@ -1,0 +1,10 @@
+AS86 = as86 -0 -a 
+LD86 = ld86 -0 
+
+AS = as --32
+LD = ld 
+LdFlags = -m elf_i386
+CC = gcc 
+CFlags = -m32 -O0 -g3 -fstrength-reduce -fomit-frame-pointer -fno-stack-protector -fno-builtin
+CPP = cpp -nostdinc 
+AR = ar 

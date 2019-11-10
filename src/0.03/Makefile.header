@@ -1,0 +1,11 @@
+AS = as --32
+LD = ld 
+LdFlags = -m elf_i386
+CC = gcc 
+CFlags = -m32 -nostdinc -O0 -g3 -fstrength-reduce -fomit-frame-pointer -fno-stack-protector -fno-builtin
+
+CPP = cpp -nostdinc 
+AR = ar 
+STRIP = strip 
+OBJCOPY = objcopy 
+
